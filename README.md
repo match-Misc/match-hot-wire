@@ -40,6 +40,8 @@ an, wenn sie diesen Start noch benötigt.
 
 - Ein registrierter Tag lädt den Spielernamen vom zentralen Server.
 - Die Begrüßung bleibt bis zum Spielstart stehen.
+- Bis zum Spielstart kann ein anderer Tag den angemeldeten Spieler ersetzen.
+  Während der neuen Spielerabfrage bitte noch nicht starten; erst auf die Begrüßung warten.
 - `Laeuft` wechselt auf `true`: Spieler und Override-Stufe werden festgehalten.
 - `Laeuft` wechselt auf `false`: `Zeit` wird sofort eingefroren. Ein danach
   weiterlaufender UR-Zähler verändert das Ergebnis nicht.

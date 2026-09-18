@@ -20,8 +20,11 @@ Der Knopf **Vollbild** vergrößert die Anzeige auf dem Roboterdisplay.
 5. Die Anzeige zeigt das Ergebnis sechs Sekunden und wartet anschließend wieder
    auf einen Tag. Für eine weitere Runde denselben Tag kurz abheben und neu auflegen.
 
-Ein weiterer Tag während einer Anmeldung oder eines Spiels ersetzt den Spieler
-nicht. Die Anmeldung bleibt bis zum Spielstart bestehen. Unbekannte Tags
+Bis zum Spielstart ersetzt ein neu aufgelegter Tag die bisherige Anmeldung.
+Bei mehreren Scans zählt die letzte Abfrage; verspätete Antworten älterer Abfragen
+werden ignoriert. Erst nach der neuen Begrüßung starten. Beginnt das Spiel während
+der Abfrage, wird es keinem Spieler zugeordnet. Ab Spielstart ist der Spieler
+bis zum Abschluss fest gebunden. Unbekannte Tags
 werden nicht registriert; dafür weiterhin das zentrale Dashboard verwenden.
 
 ## UR-Anbindung

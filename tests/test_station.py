@@ -169,6 +169,51 @@ def test_greeting_waits_for_start_without_expiring(game):
     assert game.phase == 'playing' and game.attempt['player']['id'] == 3
 
 
+def test_player_can_change_until_start_and_score_belongs_to_replacement(game):
+    register(game)
+    game.event('scan', {'uid': '11223344'}, 2)
+    assert game.phase == 'identifying' and game.player is None
+    _, request = game.actions.pop()
+    game.event('lookup_done', {'token': request['token'], 'player': {'id': 4, 'name': 'Next'}}, 2.1)
+    assert game.status()['player'] == 'Next'
+    snapshot(game, True, 0.0, False, 3)
+    game.event('scan', {'uid': '55667788'}, 3.1)
+    assert not game.actions and game.attempt['player']['id'] == 4
+    snapshot(game, False, 12.0, True, 4)
+    snapshot(game, False, 12.0, True, 4.6)
+    assert game.store.pending()['player_id'] == 4
+
+
+def test_latest_scan_wins_even_with_out_of_order_lookup_responses(game):
+    register(game)
+    game.event('scan', {'uid': '11223344'}, 2)
+    old_token = game.lookup_token
+    game.event('scan', {'uid': '55667788'}, 2.1)
+    token = game.lookup_token
+    game.event('lookup_done', {'token': old_token, 'player': {'id': 4, 'name': 'Old'}}, 2.2)
+    assert game.phase == 'identifying' and game.player is None
+    game.event('lookup_done', {'token': token, 'player': {'id': 5, 'name': 'Latest'}}, 2.3)
+    game.event('lookup_done', {'token': old_token, 'error': 'Late failure'}, 2.4)
+    assert game.phase == 'ready' and game.player['id'] == 5
+
+
+@pytest.mark.parametrize('start_during_lookup', [True, False])
+def test_unresolved_replacement_never_scores_for_previous_player(game, start_during_lookup):
+    register(game)
+    game.event('scan', {'uid': '11223344'}, 2)
+    token = game.lookup_token
+    if start_during_lookup:
+        snapshot(game, True, 0.0, False, 2.1)
+        game.event('lookup_done', {'token': token, 'player': {'id': 4, 'name': 'Late'}}, 2.2)
+    else:
+        game.event('lookup_done', {'token': token, 'error': 'Unknown tag'}, 2.1)
+        snapshot(game, True, 0.0, False, 2.2)
+    assert game.phase == 'error' and game.attempt is None and game.player is None
+    snapshot(game, False, 12.0, False, 3)
+    snapshot(game, False, 12.0, False, 3.6)
+    assert game.store.pending() is None
+
+
 def test_queued_start_before_lookup_completion_cannot_claim_player(game):
     game.event('scan', {'uid': '53867A9F530001'}, 1)
     token = game.lookup_token

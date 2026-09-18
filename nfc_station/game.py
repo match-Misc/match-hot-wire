@@ -77,8 +77,11 @@ class Game:
             else:
                 self.override, self.override_at = data['override'], now
         elif kind == 'scan':
-            if self.phase != 'idle' or self.running is True:
+            if self.phase not in ('idle', 'identifying', 'ready') or self.running is True:
                 return
+            # The latest presented tag owns registration until the start edge.
+            # Never fall back to the previous player while its replacement is unresolved.
+            self.player, self.ready_since = None, None
             self.phase, self.message = 'identifying', 'Dein Tag wird gelesen …'
             self.lookup_token = uuid.uuid4().hex
             self.actions.append(('lookup', {'uid': data['uid'], 'token': self.lookup_token}))

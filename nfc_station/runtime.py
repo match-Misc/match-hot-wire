@@ -87,6 +87,8 @@ class Runtime:
                     while self.game.actions:
                         kind, data = self.game.actions.pop(0)
                         if kind == 'lookup':
+                            if self.lookup:
+                                self.lookup[1].cancel()
                             self.lookup = (data['token'], self.pool.submit(self.api.player, data['uid']))
                     if self.submission is None and now >= self.next_retry:
                         payload = self.store.pending()
