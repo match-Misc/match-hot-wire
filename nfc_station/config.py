@@ -13,7 +13,7 @@ ROOT = Path(__file__).resolve().parent.parent
 class Config:
     serial_port: str
     station_key: str
-    dashboard_url: str = "http://10.145.8.144:8001"
+    dashboard_url: str = "http://10.145.8.70:8001"
     ur_host: str = "ur10_r"
     ur_port: int = 30011
     running_variable: str = "laeuft"
@@ -45,7 +45,7 @@ class Config:
             return env.get(name) or default
         cfg = cls(
             serial_port=get("NFC_SERIAL_PORT"), station_key=get("NFC_STATION_KEY"),
-            dashboard_url=get("STATION_DASHBOARD_URL", "http://10.145.8.144:8001").rstrip("/"),
+            dashboard_url=get("STATION_DASHBOARD_URL", "http://10.145.8.70:8001").rstrip("/"),
             ur_host=get("STATION_UR_HOST", "ur10_r"),
             running_variable=get("STATION_RUNNING_VARIABLE", "laeuft"),
             time_variable=get("STATION_TIME_VARIABLE", "Zeit"),

@@ -1,7 +1,7 @@
 # Heißer Draht: NFC-Spielstation auf mur620c
 
 Die Station verbindet den USB-NFC-Reader mit dem UR `ur10_r` und dem zentralen
-Dashboard auf `http://10.145.8.144:8001`. Ihre Anzeige läuft unter
+Dashboard auf `http://10.145.8.70:8001`. Ihre Anzeige läuft unter
 **http://mur620c:8002/** (auf dem Roboter-PC selbst: `http://localhost:8002/`).
 Der Knopf **Vollbild** vergrößert die Anzeige auf dem Roboterdisplay.
 
@@ -94,7 +94,7 @@ Webseite. Dateien mit Zugangsdaten sind mit Modus `0600` anzulegen.
 Auf mur620c lautet die relevante Konfiguration:
 
 ```dotenv
-STATION_DASHBOARD_URL=http://10.145.8.144:8001
+STATION_DASHBOARD_URL=http://10.145.8.70:8001
 STATION_UR_HOST=ur10_r
 STATION_RUNNING_VARIABLE=Laeuft
 STATION_TIME_VARIABLE=Zeit
