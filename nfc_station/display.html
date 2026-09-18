@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#101c26">
+  <title>Heißer Draht · Spielstation</title>
+  <style>
+    :root{color-scheme:dark;font-family:system-ui,-apple-system,sans-serif;background:#101c26;color:#f7f8ef;--accent:#dafb70;--muted:#aebcc7}
+    *{box-sizing:border-box}body{margin:0;min-height:100svh;display:flex;flex-direction:column;padding:clamp(16px,3vw,40px);gap:22px}
+    header,footer,.connections,.steps{display:flex;align-items:center;gap:18px}header{justify-content:space-between}.brand{font-weight:800;letter-spacing:.06em;font-size:clamp(16px,2vw,25px)}.brand span{color:var(--accent)}
+    button{font:inherit;color:inherit;background:transparent;border:1px solid #50616d;border-radius:10px;padding:10px 16px;cursor:pointer;min-height:44px}button:focus-visible{outline:3px solid var(--accent)}
+    main{flex:1;display:grid;place-content:center;text-align:center;padding:28px 16px;background:#172935;border:1px solid #2b4352;border-radius:26px;min-height:310px;position:relative;overflow:hidden}
+    .eyebrow{color:var(--accent);font-weight:800;text-transform:uppercase;letter-spacing:.17em;font-size:14px;margin:0 0 18px}
+    h1{font-size:clamp(32px,5.6vw,74px);line-height:1.1;margin:0 auto 20px;max-width:1050px;overflow-wrap:anywhere;letter-spacing:-.035em}
+    #message{font-size:clamp(18px,2.4vw,30px);color:#c9d6de;max-width:900px;line-height:1.4;margin:0 auto}
+    #time{font-size:clamp(45px,8vw,104px);font-weight:800;font-variant-numeric:tabular-nums;color:var(--accent);line-height:1.15;margin:18px 0}
+    #detail{color:var(--muted);font-size:18px;margin:10px 0 0}.symbol{font-size:50px;margin-bottom:18px;line-height:1}.symbol svg{width:76px;height:76px;stroke:var(--accent);fill:none;stroke-width:2.5}
+    .steps{justify-content:center;color:var(--muted);font-size:clamp(12px,1.5vw,17px);flex-wrap:wrap}.steps span{display:flex;align-items:center;gap:9px}.steps b{display:grid;place-items:center;border:1px solid #50616d;border-radius:50%;width:27px;height:27px;font-size:13px}.steps .active{color:var(--accent)}.steps .active b{background:var(--accent);color:#101c26;border-color:var(--accent)}
+    footer{justify-content:space-between;font-size:14px;color:var(--muted);flex-wrap:wrap}.connections{gap:16px}.status{display:flex;align-items:center;gap:7px}.dot{width:8px;height:8px;border-radius:50%;background:#f2b665}.good .dot{background:var(--accent)}
+    #notice{color:#ffce8f;max-width:640px}main[data-phase=playing]{border-color:#8caa47}main[data-phase=error],main[data-phase=offline]{border-color:#a2764a}
+    [hidden]{display:none!important}@media(max-height:600px){body{gap:12px;padding:16px}main{padding:20px;min-height:245px}.symbol{display:none}h1{margin-bottom:12px;font-size:40px}#time{font-size:58px;margin:10px 0}.eyebrow{margin-bottom:10px}#message{font-size:21px}}
+  </style>
+</head>
+<body>
+  <header><div class="brand"><span>HEISSER DRAHT</span> / DU GEGEN DEN ROBOTER</div><button id="fullscreen" type="button" aria-label="Vollbild umschalten">Vollbild</button></header>
+  <main id="card" data-phase="connecting" aria-live="polite" aria-atomic="true">
+    <div class="symbol" id="symbol" aria-hidden="true"><svg viewBox="0 0 80 80"><rect x="18" y="10" width="44" height="60" rx="8" transform="rotate(-10 40 40)"/><path d="M32 28c10 0 18 8 18 18M32 36c6 0 10 4 10 10M32 44h1" stroke-linecap="round"/></svg></div>
+    <p class="eyebrow" id="eyebrow">Deine nächste Herausforderung</p>
+    <h1 id="title">Station wird verbunden …</h1>
+    <p id="message">Einen kleinen Moment bitte.</p>
+    <div id="time" hidden></div><p id="detail" hidden></p>
+  </main>
+  <nav class="steps" aria-label="Spielablauf"><span id="step1"><b>1</b>Tag auflegen</span><span id="step2"><b>2</b>Knopf drücken</span><span id="step3"><b>3</b>Spielen</span><span id="step4"><b>4</b>Ergebnis</span></nav>
+  <footer><div class="connections"><span class="status" id="reader"><i class="dot"></i><span>Reader</span></span><span class="status" id="robot"><i class="dot"></i><span>Roboter</span></span></div><span id="notice" role="status"></span></footer>
+  <script>
+    const $=id=>document.getElementById(id);
+    const seconds=n=>new Intl.NumberFormat('de-DE',{minimumFractionDigits:2,maximumFractionDigits:2}).format(n)+' s';
+    function render(s){
+      const p=s.phase; let title='', message=s.message, eyebrow='Heißer Draht', step=1, time=null, detail='';
+      if(p==='idle'){
+        title=s.robot.running?'Das Spiel läuft gerade':'Bist du schneller?';
+        message=s.robot.running?'Gleich bist du dran. Warte bitte bis zum Spielende.':'Halte deinen Tag an den Reader.';
+        eyebrow='Du gegen den Roboter';
+      }else if(p==='identifying'){title='Wer spielt als Nächstes?';message='Dein Tag wird gelesen …';}
+      else if(p==='ready'){title='Hallo, '+s.player+'!';eyebrow='Schön, dass du mitspielst';step=2;if(!s.robot.ready)message='Du bist angemeldet. Wir warten noch auf den Roboter.';}
+      else if(p==='playing'){title='Dein Spiel läuft!';eyebrow='Los geht’s, '+s.player;step=3;time=s.live_seconds;}
+      else if(p==='finishing'){title='Geschafft, '+s.player+'!';step=4;}
+      else if(p==='sending'||p==='result'){
+        title=s.result?.outcome==='win'?'Du hast gewonnen!':s.result?.outcome==='draw'?'Unentschieden!':'Gut gespielt!';
+        eyebrow=s.player||'Dein Ergebnis';step=4;time=s.result?s.result.duration_ms/1000:null;
+        detail=s.result?'Schwierigkeit: '+s.result.difficulty:'';
+        if(p==='result')detail+=' · Für die nächste Runde den Tag kurz abheben und wieder auflegen.';
+      }else {title='Einen Moment bitte';eyebrow='Wir brauchen kurz Hilfe';}
+      if(!detail&&s.difficulty)detail='Dein Level: '+s.difficulty+(s.override!==null?' · '+Math.round(s.override*100)+' %':'');
+      $('card').dataset.phase=p;$('title').textContent=title;$('message').textContent=message;$('eyebrow').textContent=eyebrow;
+      $('time').hidden=time===null;$('time').textContent=time===null?'':seconds(time);
+      $('detail').hidden=!detail;$('detail').textContent=detail;$('symbol').hidden=p!=='idle';
+      for(let i=1;i<=4;i++)$('step'+i).classList.toggle('active',i===step);
+      $('reader').classList.toggle('good',s.reader.ready);$('robot').classList.toggle('good',s.robot.ready);
+      $('notice').textContent=!s.configured?'Spielauswertung wird eingerichtet.':!s.reader.ready?'Reader wird verbunden …':s.robot.message||
+        (s.pending_results?'Ergebnisse werden noch übertragen.':s.server_error||'');
+    }
+    async function poll(){
+      try{const response=await fetch('/api/state',{cache:'no-store',signal:AbortSignal.timeout(3000)});if(!response.ok)throw Error();render(await response.json());}
+      catch{
+        $('card').dataset.phase='offline';$('title').textContent='Verbindung zur Station unterbrochen';$('message').textContent='Bitte kurz warten. Die Anzeige verbindet sich automatisch wieder.';
+        $('time').hidden=true;$('detail').hidden=true;$('notice').textContent='Station nicht erreichbar';$('reader').classList.remove('good');$('robot').classList.remove('good');
+      }finally{setTimeout(poll,300)}
+    }
+    $('fullscreen').onclick=async()=>{try{if(document.fullscreenElement)await document.exitFullscreen();else await document.documentElement.requestFullscreen();}catch{}};
+    poll();
+  </script>
+</body>
+</html>

@@ -1,0 +1,15 @@
+[Unit]
+Description=NFC Heisser Draht Spielstation
+
+[Service]
+Type=simple
+WorkingDirectory=%h/NDM_ws/src/match-hot-wire
+ExecStart=%h/NDM_ws/src/match-hot-wire/run-station.sh 8002
+Restart=on-failure
+RestartSec=3
+TimeoutStopSec=20
+KillSignal=SIGINT
+UMask=0077
+
+[Install]
+WantedBy=default.target

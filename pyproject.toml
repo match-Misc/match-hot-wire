@@ -1,0 +1,20 @@
+[project]
+name = "match-hot-wire"
+version = "0.1.0"
+description = "NFC and read-only UR game station for MATCH Heißer Draht"
+requires-python = ">=3.10"
+dependencies = [
+    "fastapi>=0.116,<0.117",
+    "uvicorn>=0.30,<1",
+    "pyserial>=3.5,<4",
+    "python-dotenv>=1.0,<2",
+]
+
+[dependency-groups]
+dev = [
+    "httpx>=0.27,<1",
+    "pytest>=8,<10",
+]
+
+[tool.uv]
+package = false
