@@ -31,17 +31,43 @@
     #notice{color:#ffce8f;max-width:640px}main[data-phase=playing]{border-color:#8caa47}main[data-phase=error],main[data-phase=offline]{border-color:#a2764a}
     [hidden]{display:none!important}@media(max-height:600px){body{gap:12px;padding:16px}main{padding:20px;min-height:245px}.symbol{display:none}h1{margin-bottom:12px;font-size:40px}#time{font-size:58px;margin:10px 0}.eyebrow{margin-bottom:10px}#message{font-size:21px}}
     @media(max-height:600px) and (min-width:650px){body{gap:8px;padding:12px}main{padding:12px}main:has(#levels:not([hidden])) #level{display:none}h1{font-size:32px;margin-bottom:8px}.eyebrow{font-size:12px;margin-bottom:6px}#message{font-size:18px}#levels{margin-top:12px}#levels h2{font-size:16px;margin-bottom:8px}#level-options button{min-height:52px;padding:6px 4px;font-size:13px}#level-options button span{font-size:11px}#level-feedback{margin-top:6px;font-size:12px}}
+    button{touch-action:manipulation}button:active:not(:disabled){background:#314833}
+    @media(min-width:1000px) and (min-height:650px){
+      body{padding:clamp(20px,2vmin,48px);gap:clamp(12px,1.5vmin,32px)}
+      header{gap:24px}.brand{font-size:clamp(22px,2.4vmin,52px)}
+      #fullscreen{min-height:clamp(64px,7vmin,144px);min-width:clamp(150px,16vmin,340px);font-size:clamp(22px,2.3vmin,48px);border-radius:18px}
+      main{display:flex;flex-direction:column;justify-content:space-evenly;padding:clamp(20px,2.4vmin,52px);border-radius:clamp(26px,3vmin,64px)}
+      .hero{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:clamp(10px,1.3vmin,28px);padding:8px 0;min-width:0}
+      .symbol{display:none}.eyebrow{font-size:clamp(17px,1.9vmin,40px);margin:0}
+      h1{font-size:clamp(60px,7.8vmin,168px);max-width:100%;margin:0}
+      #message{font-size:clamp(24px,3vmin,64px);max-width:95%;line-height:1.3}
+      #level{display:flex;align-items:center;gap:18px;margin:0;padding:8px 24px}
+      #level-label{font-size:clamp(16px,1.8vmin,38px);margin:0}#level-name{font-size:clamp(24px,3vmin,64px)}
+      #levels{width:100%;margin:clamp(16px,2vmin,44px) 0 0}
+      #levels h2{font-size:clamp(24px,2.7vmin,58px);margin-bottom:clamp(12px,1.5vmin,32px)}
+      #level-options{gap:clamp(12px,1.4vmin,30px)}
+      #level-options button{min-height:clamp(100px,12vmin,260px);font-size:clamp(20px,2.6vmin,56px);font-weight:700;padding:16px 10px;border-radius:clamp(16px,2vmin,44px);border-width:2px}
+      #level-options button span{font-size:clamp(16px,1.9vmin,40px);font-weight:400;margin-bottom:8px}
+      #level-options button[aria-pressed=true]{box-shadow:inset 0 0 0 2px var(--accent)}
+      #level-feedback{font-size:clamp(16px,1.9vmin,40px);margin-top:clamp(10px,1.2vmin,26px)}
+      #time{font-size:clamp(140px,24vmin,520px);margin:0}#detail{font-size:clamp(24px,3vmin,64px);margin:0}
+      .steps{font-size:clamp(20px,2.4vmin,52px);gap:clamp(24px,5vw,180px)}.steps span{gap:14px}.steps b{width:clamp(36px,4.4vmin,96px);height:clamp(36px,4.4vmin,96px);font-size:clamp(20px,2.2vmin,48px)}
+      footer{font-size:clamp(17px,1.9vmin,40px)}.connections{gap:32px}.dot{width:clamp(10px,1.2vmin,26px);height:clamp(10px,1.2vmin,26px)}#notice{max-width:65%}
+    }
+    @media(min-width:1000px) and (min-height:650px) and (max-height:800px){body{padding:12px;gap:8px}main{padding:12px}.hero{gap:8px}#levels{margin-top:12px}}
   </style>
 </head>
 <body>
   <header><div class="brand"><span>HEISSER DRAHT</span> / DU GEGEN DEN ROBOTER</div><button id="fullscreen" type="button" aria-label="Vollbild umschalten">Vollbild</button></header>
   <main id="card" data-phase="connecting" aria-live="polite" aria-atomic="true">
+    <div class="hero">
     <div class="symbol" id="symbol" aria-hidden="true"><svg viewBox="0 0 80 80"><rect x="18" y="10" width="44" height="60" rx="8" transform="rotate(-10 40 40)"/><path d="M32 28c10 0 18 8 18 18M32 36c6 0 10 4 10 10M32 44h1" stroke-linecap="round"/></svg></div>
     <p class="eyebrow" id="eyebrow">Deine nächste Herausforderung</p>
     <h1 id="title">Station wird verbunden …</h1>
     <p id="message">Einen kleinen Moment bitte.</p>
     <div id="level" hidden><span id="level-label">Dein aktuelles Level</span><strong id="level-name"></strong></div>
     <div id="time" hidden></div><p id="detail" hidden></p>
+    </div>
     <section id="levels" aria-label="Schwierigkeit wählen" hidden><h2>Wähle deine Herausforderung</h2><div id="level-options"></div><p id="level-feedback" role="status"></p></section>
   </main>
   <nav class="steps" aria-label="Spielablauf"><span id="step1"><b>1</b>Tag auflegen</span><span id="step2"><b>2</b>Knopf drücken</span><span id="step3"><b>3</b>Spielen</span><span id="step4"><b>4</b>Ergebnis</span></nav>

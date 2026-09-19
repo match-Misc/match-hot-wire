@@ -207,3 +207,21 @@ selbst eine Freigabe für den Start auswerten. Die konfigurierte Robotersicherhe
 bleibt maßgeblich. Der Stationsserver ist nur für das vertrauenswürdige
 Stationsnetz vorgesehen; die Schreibroute schützt gegen fremde Browser-Origins,
 setzt aber keine Benutzeranmeldung voraus.
+
+
+## Große Anzeige und Dauerbetrieb auf mur620c
+
+Die Oberfläche skaliert für einen 65-Zoll-Fernseher bei Full HD oder 4K:
+Begrüßung, Spielzeit, Ergebnis und Levelwahl nutzen die volle verfügbare Fläche.
+Auf großen Anzeigen sind die Level-Schaltflächen mindestens 100 CSS-Pixel hoch;
+der Vollbildknopf oben rechts vergrößert die nutzbare Fläche zusätzlich.
+
+Für den GNOME-Benutzer `rosmatch` auf `mur620c` wurde am 19.09.2026 auf Wunsch
+Daueranzeige eingerichtet: `org.gnome.desktop.session idle-delay=0`, automatische
+Bildschirmsperre/-aktivierung und Abmeldung deaktiviert, `idle-dim=false` sowie
+`sleep-inactive-ac-type` und `sleep-inactive-battery-type` auf `nothing` mit
+Timeout 0. Diese Benutzereinstellungen bleiben nach einem Neustart erhalten.
+Die vorherigen Werte liegen auf dem PC unter
+`~/.local/state/match-hot-wire/desktop-idle-backup-*.json` (Schema, Schlüssel, Wert).
+Der Desktop bleibt damit auch unbeaufsichtigt zugänglich. Ein eigener Abschalttimer
+im Fernseher wird durch diese PC-Einstellungen nicht verändert.
