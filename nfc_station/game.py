@@ -32,6 +32,7 @@ class Game:
         self.server_error = None
         self.override = None
         self.override_at = None
+        self.level_change_pending = False
 
     def idle(self):
         self.phase, self.player, self.attempt = 'idle', None, None
@@ -133,6 +134,9 @@ class Game:
         self.running, self.values, self.ur_error = running, values, None
         if running and previous is not True:
             if self.phase == 'ready' and previous is False and self.ready_since is not None and now >= self.ready_since:
+                if self.level_change_pending:
+                    self.fail('Das Spiel begann während der Levelwahl. Bitte vor dem Start die Bestätigung abwarten.', now)
+                    return
                 if not self.config.mapping_ready:
                     self.fail('Die Spielauswertung ist noch nicht eingerichtet.', now)
                     return

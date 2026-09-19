@@ -419,3 +419,11 @@ def test_station_end_to_end_serial_ur_http_retry_and_display(tmp_path, winner, o
         listener.close()
         server.shutdown(); server.server_close(); http_thread.join(timeout=2)
         os.close(master); os.close(slave)
+
+
+def test_start_during_level_change_does_not_record_unconfirmed_difficulty(game):
+    register(game)
+    game.level_change_pending = True
+    snapshot(game, True, 0.0, False, 2)
+    assert game.phase == 'error' and game.attempt is None
+    assert game.store.pending() is None

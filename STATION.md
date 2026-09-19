@@ -29,9 +29,10 @@ werden nicht registriert; dafür weiterhin das zentrale Dashboard verwenden.
 
 ## UR-Anbindung
 
-Die Verbindung verwendet ausschließlich die **Primary Read-Only-Schnittstelle auf
-Port 30011**. Die Station sendet keine URScript-, Bewegungs-, Start-, Stopp- oder
-Override-Befehle. Grundlage ist die
+Die Spielbeobachtung verwendet die **Primary Read-Only-Schnittstelle auf
+Port 30011**. Die Station sendet keine URScript-, Bewegungs-, Start- oder Stoppbefehle.
+Die Levelwahl setzt ausschließlich den Override über RTDE (Port 30004), siehe unten.
+Grundlage der Spielbeobachtung ist die
 [offizielle UR-Protokollbeschreibung](https://docs.universal-robots.com/tutorials/communication-protocol-tutorials/primary-secondary-guide.html).
 
 Auf dem tatsächlichen Programm `NDW26_Draht.urp` wurden diese Variablennamen beobachtet:
@@ -182,3 +183,27 @@ In der ursprünglichen gemeinsamen Dashboard-/Stationsumgebung bestanden
 Sieg und Niederlage mit weiterlaufendem Zeit-Zähler sowie verlorener HTTP-Antwort.
 Die Browseranzeige wurde in 15 Kombinationen aus Spielzustand und Bildschirmgröße
 (1280×800, 800×480, 390×844) ohne JavaScript-Fehler oder horizontalen Überlauf geprüft.
+
+## Levelwahl am Display
+
+Die zehn Schaltflächen sind im Wartebildschirm vor und nach der Anmeldung sichtbar.
+Die Zielwerte liegen in der Mitte der bestehenden Bereiche: 5 %, 15 %, …, 95 %.
+Der Server akzeptiert nur Stufen 1–10 und nur bei `Laeuft=false`, frischen
+UR-Statusdaten und Zustand `idle` oder `ready`. Unmittelbar vor dem Schreibzugriff
+wird diese Voraussetzung erneut geprüft. Es gibt keine automatischen Schreib-Retries.
+Die bestehende UR-Rückmeldung bestimmt weiterhin die Anzeige und die Wertung.
+
+Die Steuerung verwendet [UR RTDE](https://docs.universal-robots.com/tutorials/communication-protocol-tutorials/rtde-guide.html),
+Protokoll 2: `speed_slider_mask` und `speed_slider_fraction` als Eingänge,
+`target_speed_fraction` als Bestätigung. Belegte Eingänge, Verbindungsfehler und
+fehlende Bestätigung werden angezeigt. RTDE muss in den UR-Netzwerkeinstellungen
+verfügbar sein. Die Eingänge werden nach jedem Vorgang wieder freigegeben.
+
+Vor dem Spielstart die Bestätigung abwarten. Ein Start während der Übertragung
+wird nicht als gewerteter Versuch übernommen. Die UI-Sperre ist keine
+sicherheitsgerichtete Verriegelung des physischen Startknopfs: Die Überwachung
+über Netzwerk hat Latenz; für eine harte Verriegelung müsste das UR-Programm
+selbst eine Freigabe für den Start auswerten. Die konfigurierte Robotersicherheit
+bleibt maßgeblich. Der Stationsserver ist nur für das vertrauenswürdige
+Stationsnetz vorgesehen; die Schreibroute schützt gegen fremde Browser-Origins,
+setzt aber keine Benutzeranmeldung voraus.

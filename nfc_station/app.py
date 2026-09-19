@@ -3,11 +3,18 @@ import logging
 from contextlib import asynccontextmanager
 from pathlib import Path
 
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException, Request
+from pydantic import BaseModel, Field, ConfigDict
 from fastapi.responses import FileResponse, JSONResponse
 
 from .config import Config
 from .runtime import Runtime
+from .speed import SpeedError
+
+
+class LevelSelection(BaseModel):
+    model_config = ConfigDict(extra='forbid')
+    level: int = Field(strict=True, ge=1, le=10)
 
 
 def create_app(config=None, runtime=None):
@@ -44,5 +51,18 @@ def create_app(config=None, runtime=None):
         station = app.state.station
         alive = not station.stop_event.is_set()
         return JSONResponse({'ok': alive}, status_code=200 if alive else 503)
+
+    @app.post('/api/level')
+    def select_level(selection: LevelSelection, request: Request):
+        origin = request.headers.get('origin')
+        if (request.headers.get('x-station-control') != 'level'
+                or (origin and origin != str(request.base_url).rstrip('/'))
+                or request.headers.get('sec-fetch-site') == 'cross-site'):
+            raise HTTPException(403, 'Levelwahl bitte direkt in der Stationsanzeige durchführen.')
+        try:
+            app.state.station.select_level(selection.level)
+        except SpeedError as exc:
+            raise HTTPException(409, str(exc)) from exc
+        return {'ok': True}
 
     return app

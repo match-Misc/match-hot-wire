@@ -19,10 +19,18 @@
     #level{justify-self:center;max-width:100%;margin:24px 0 0;padding:14px 26px;border:1px solid #718641;border-radius:18px;background:#243b30;overflow-wrap:anywhere}
     #level-label{display:block;color:#c9d6de;font-size:14px;margin-bottom:4px}#level-name{display:block;color:var(--accent);font-size:clamp(24px,3vw,38px);font-weight:800}
     main[data-phase=ready]{border-color:var(--accent);background:radial-gradient(ellipse at top,#2b4438,#172935 75%)}
+    #levels{margin:22px auto 0;width:min(100%,1000px)}#levels h2{font-size:18px;margin:0 0 12px}
+    #level-options{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}
+    #level-options button{padding:10px 6px;min-height:66px;font-size:14px;overflow-wrap:anywhere}
+    #level-options button span{display:block;font-size:12px;color:var(--muted);margin-bottom:4px}
+    #level-options button[aria-pressed=true]{border-color:var(--accent);background:#314833;color:var(--accent)}
+    #level-options button:disabled{cursor:default;opacity:.55}#level-feedback{font-size:14px;color:var(--muted);min-height:20px;margin:10px 0 0}
+    @media(max-width:550px){#level-options{grid-template-columns:repeat(2,minmax(0,1fr))}}
     .steps{justify-content:center;color:var(--muted);font-size:clamp(12px,1.5vw,17px);flex-wrap:wrap}.steps span{display:flex;align-items:center;gap:9px}.steps b{display:grid;place-items:center;border:1px solid #50616d;border-radius:50%;width:27px;height:27px;font-size:13px}.steps .active{color:var(--accent)}.steps .active b{background:var(--accent);color:#101c26;border-color:var(--accent)}
     footer{justify-content:space-between;font-size:14px;color:var(--muted);flex-wrap:wrap}.connections{gap:16px}.status{display:flex;align-items:center;gap:7px}.dot{width:8px;height:8px;border-radius:50%;background:#f2b665}.good .dot{background:var(--accent)}
     #notice{color:#ffce8f;max-width:640px}main[data-phase=playing]{border-color:#8caa47}main[data-phase=error],main[data-phase=offline]{border-color:#a2764a}
     [hidden]{display:none!important}@media(max-height:600px){body{gap:12px;padding:16px}main{padding:20px;min-height:245px}.symbol{display:none}h1{margin-bottom:12px;font-size:40px}#time{font-size:58px;margin:10px 0}.eyebrow{margin-bottom:10px}#message{font-size:21px}}
+    @media(max-height:600px) and (min-width:650px){body{gap:8px;padding:12px}main{padding:12px}main:has(#levels:not([hidden])) #level{display:none}h1{font-size:32px;margin-bottom:8px}.eyebrow{font-size:12px;margin-bottom:6px}#message{font-size:18px}#levels{margin-top:12px}#levels h2{font-size:16px;margin-bottom:8px}#level-options button{min-height:52px;padding:6px 4px;font-size:13px}#level-options button span{font-size:11px}#level-feedback{margin-top:6px;font-size:12px}}
   </style>
 </head>
 <body>
@@ -34,13 +42,45 @@
     <p id="message">Einen kleinen Moment bitte.</p>
     <div id="level" hidden><span id="level-label">Dein aktuelles Level</span><strong id="level-name"></strong></div>
     <div id="time" hidden></div><p id="detail" hidden></p>
+    <section id="levels" aria-label="Schwierigkeit wählen" hidden><h2>Wähle deine Herausforderung</h2><div id="level-options"></div><p id="level-feedback" role="status"></p></section>
   </main>
   <nav class="steps" aria-label="Spielablauf"><span id="step1"><b>1</b>Tag auflegen</span><span id="step2"><b>2</b>Knopf drücken</span><span id="step3"><b>3</b>Spielen</span><span id="step4"><b>4</b>Ergebnis</span></nav>
   <footer><div class="connections"><span class="status" id="reader"><i class="dot"></i><span>Reader</span></span><span class="status" id="robot"><i class="dot"></i><span>Roboter</span></span></div><span id="notice" role="status"></span></footer>
   <script>
     const $=id=>document.getElementById(id);
     const seconds=n=>new Intl.NumberFormat('de-DE',{minimumFractionDigits:2,maximumFractionDigits:2}).format(n)+' s';
+    let selecting=false, selectionError='', lastState=null;
+    function renderLevels(s){
+      const c=s.level_control;
+      $('levels').hidden=!c||!['idle','identifying','ready'].includes(s.phase);
+      if(!c)return;
+      if(!$('level-options').children.length){
+        for(const option of c.options){
+          const button=document.createElement('button');button.type='button';button.dataset.level=option.level;
+          const number=document.createElement('span');number.textContent='Stufe '+option.level+' · '+Math.round(option.override*100)+' %';
+          button.append(number,document.createTextNode(option.name.replace('Hochspannungsheld','Hochspannungs\u00adheld')));
+          button.onclick=()=>chooseLevel(option.level);$('level-options').append(button);
+        }
+      }
+      for(const button of $('level-options').children){
+        const option=c.options.find(o=>o.level===Number(button.dataset.level));
+        button.disabled=selecting||!c.enabled;
+        button.setAttribute('aria-pressed',String(option.name===s.difficulty));
+      }
+      $('level-feedback').textContent=selectionError||(selecting||c.pending?'Level wird am Roboter eingestellt …':
+        !c.enabled?'Levelwahl verfügbar, sobald der Roboter bereit ist und kein Spiel läuft.':c.message||'Von gemütlich bis blitzschnell – du entscheidest!');
+    }
+    async function chooseLevel(level){
+      if(selecting||!lastState?.level_control?.enabled)return;
+      selecting=true;selectionError='';renderLevels(lastState);
+      try{
+        const response=await fetch('/api/level',{method:'POST',headers:{'Content-Type':'application/json','X-Station-Control':'level'},body:JSON.stringify({level}),signal:AbortSignal.timeout(8000)});
+        const result=await response.json();if(!response.ok)throw Error(typeof result.detail==='string'?result.detail:'Level konnte nicht eingestellt werden.');
+      }catch(error){selectionError=error.name==='TimeoutError'?'Keine Bestätigung. Bitte den aktuellen Wert prüfen.':error.message;}
+      finally{selecting=false;if(lastState)renderLevels(lastState);}
+    }
     function render(s){
+      lastState=s;renderLevels(s);
       const p=s.phase; let title='', message=s.message, eyebrow='Heißer Draht', step=1, time=null, detail='';
       if(p==='idle'){
         title=s.robot.running?'Das Spiel läuft gerade':'Bist du schneller?';
@@ -69,6 +109,7 @@
     async function poll(){
       try{const response=await fetch('/api/state',{cache:'no-store',signal:AbortSignal.timeout(3000)});if(!response.ok)throw Error();render(await response.json());}
       catch{
+        lastState=null;$('levels').hidden=true;
         $('card').dataset.phase='offline';$('title').textContent='Verbindung zur Station unterbrochen';$('message').textContent='Bitte kurz warten. Die Anzeige verbindet sich automatisch wieder.';
         $('time').hidden=true;$('detail').hidden=true;$('level').hidden=true;$('symbol').hidden=true;$('eyebrow').textContent='Einen Moment bitte';$('notice').textContent='Station nicht erreichbar';$('reader').classList.remove('good');$('robot').classList.remove('good');
       }finally{setTimeout(poll,300)}

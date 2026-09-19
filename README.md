@@ -5,8 +5,9 @@ Spieler vom zentralen Dashboard begrüßen, den Spielablauf am UR beobachten und
 das Ergebnis automatisch übertragen. Die lokale Webseite ist für das Roboterdisplay
 ausgelegt und läuft standardmäßig auf **Port 8002**.
 
-Die Station liest den UR ausschließlich über **Port 30011**. Sie startet und stoppt
-keine Roboterprogramme und verändert keine Bewegungen oder Geschwindigkeiten.
+Die Station liest den Spielzustand über **Port 30011**. Die Levelwahl setzt den
+Geschwindigkeits-Override über **RTDE, Port 30004**. Sie startet und stoppt keine
+Roboterprogramme; der Spielstart erfolgt weiterhin am physischen Knopf.
 
 ## Start
 
@@ -54,6 +55,14 @@ Der Override wird in zehn Stufen eingeteilt: **Drahtentdecker, Funkenfänger,
 Kabelheld, Stromsurfer, Blitzjäger, Voltprofi, Hochspannungsheld, Turbofinger,
 Blitzmeister, Drahtlegende**. Die Grenzen sind 0–<10 %, 10–<20 %, …, 90–100 %.
 Diese Namen müssen auch am zentralen Dashboard konfiguriert sein.
+
+Vor dem Scan und nach der Anmeldung zeigt die Webseite alle zehn Stufen in dieser
+Reihenfolge. Ein Klick setzt den Override auf die Mitte des jeweiligen Bereichs:
+5 %, 15 %, …, 95 %. Die Markierung folgt dem tatsächlich empfangenen UR-Wert.
+Erst die Bestätigung abwarten, dann den Spielknopf drücken. Während eines Spiels,
+bei fehlenden UR-Variablen oder veralteten Statusdaten ist die Auswahl gesperrt.
+RTDE muss am UR freigegeben sein; ein anderer Client (z. B. ein ROS-Treiber) darf
+die Speed-Slider-Eingänge nicht gleichzeitig belegen.
 
 Die vollständige Betriebsanleitung, Fehlerbehandlung und der bestätigte Hardwaretest
 stehen in [STATION.md](STATION.md). Weitere Referenzen:

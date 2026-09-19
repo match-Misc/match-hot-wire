@@ -9,6 +9,8 @@ from .game import Game
 from .reader import ScanReader
 from .storage import Store
 from .ur import URReader
+from .levels import LEVEL_OPTIONS
+from .speed import SpeedError, set_speed
 
 LOG = logging.getLogger(__name__)
 
@@ -30,6 +32,8 @@ class Runtime:
         self.next_retry = 0
         self.retry_delay = 1
         self.thread = None
+        self.speed_pending = False
+        self.speed_message = ''
 
     def emit(self, kind, data):
         while not self.stop_event.is_set():
@@ -56,7 +60,55 @@ class Runtime:
 
     def status(self):
         with self.lock:
-            return self.game.status()
+            state = self.game.status()
+            state['level_control'] = {'options': LEVEL_OPTIONS, 'enabled': self.can_set_speed(),
+                                      'pending': self.speed_pending, 'message': self.speed_message}
+            return state
+
+    def can_set_speed(self):
+        now = time.monotonic()
+        g = self.game
+        return (not self.stop_event.is_set() and not self.speed_pending
+                and self.config.difficulty_source == 'override'
+                and g.phase in ('idle', 'ready') and g.running is False
+                and g.ur_connected and g.ur_error is None
+                and g.last_snapshot is not None and now - g.last_snapshot < .5
+                and g.override_at is not None and now - g.override_at < .5)
+
+    def select_level(self, level):
+        if type(level) is not int or not 1 <= level <= 10:
+            raise SpeedError('Bitte eine Stufe von 1 bis 10 wählen.')
+        with self.lock:
+            if not self.can_set_speed():
+                raise SpeedError('Levelwahl nur vor dem Spiel mit aktueller Roboterverbindung möglich.')
+            self.speed_pending = True
+            self.game.level_change_pending = True
+            self.speed_message = 'Level wird am Roboter eingestellt …'
+
+        def guarded_send(send):
+            with self.lock:
+                self.speed_pending = False
+                try:
+                    if not self.can_set_speed() or not self.events.empty():
+                        raise SpeedError('Roboterzustand hat sich geändert. Bitte erneut wählen.')
+                    send()
+                finally:
+                    self.speed_pending = True
+
+        try:
+            set_speed(self.config.ur_host, LEVEL_OPTIONS[level - 1]['override'], guarded_send)
+        except (OSError, ValueError) as exc:
+            message = str(exc) if isinstance(exc, SpeedError) else 'Override nicht bestätigt. Bitte den aktuellen Wert am Roboter prüfen.'
+            with self.lock:
+                self.speed_message = message
+            raise SpeedError(message) from exc
+        else:
+            with self.lock:
+                self.speed_message = 'Level vom Roboter bestätigt.'
+        finally:
+            with self.lock:
+                self.speed_pending = False
+                self.game.level_change_pending = False
 
     def run(self):
         while not self.stop_event.is_set():
